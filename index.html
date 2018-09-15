@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>扇形圆环数据展示，可拖拽</title>
+  <style>
+    div {
+      user-select: none;
+    }
+
+    #outer-ring {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      position: relative;
+      background-color: #fff;
+      overflow: hidden;
+
+      margin: auto;
+      top: 100px;
+    }
+
+    #inner-ring {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      margin: auto;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    #prev-year {
+      border-radius: 100px 0 0 100px;
+      float: left;
+    }
+
+    #next-year {
+      border-radius: 0 100px 100px 0;
+      float: right;
+    }
+
+    #prev-year,
+    #next-year {
+      width: 60px;
+      height: 120px;
+      cursor: pointer;
+      transition: all 0.4s;
+      opacity: 0.3;
+    }
+
+    #prev-year:hover,
+    #next-year:hover {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    #year {
+      color: #666;
+      font-size: 36px;
+      position: absolute;
+      margin: auto;
+      text-align: center;
+      line-height: 120px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    .line {
+      width: 100px;
+      height: 100px;
+      position: absolute;
+      top: 100px;
+      cursor: pointer;
+      -webkit-transform-origin: 100% 0 0;
+      -moz-transform-origin: 100% 0 0;
+      -ms-transform-origin: 100% 0 0;
+      -o-transform-origin: 100% 0 0;
+      transform-origin: 100% 0 0;
+    }
+
+    @keyframes rotate {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    #mouse {
+      width: 240px;
+      background-color: rgba(0, 0, 0, 0.3);
+      color: #ffffff;
+      position: absolute;
+      visibility: hidden;
+      border-radius: 5px;
+      font-size: 16px;
+      padding: 3px;
+      transition: all 0.2s;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="outer-ring">
+    <div id="inner-ring">
+      <div id="year"></div>
+      <div id="prev-year"></div>
+      <div id="next-year"></div>
+    </div>
+  </div>
+
+  <div id="mouse">
+
+  </div>
+
+  <script>
+    // 周 52 6.923 -83.077
+    // 月 12 30
+
+    var data = {
+      '2017': {
+        '0': ['这里是一篇博文', '这里是一篇博文'],
+        '1': ['这里是一篇博文', '这里是一篇博文'],
+        '2': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '3': ['这里是一篇博文', '这里是一篇博文'],
+        '4': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '5': ['这里是一篇博文', '这里是一篇博文'],
+        '6': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '7': ['这里是一篇博文', '这里是一篇博文'],
+        '8': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '9': ['这里是一篇博文', '这里是一篇博文'],
+        '10': ['这里是一篇博文', '这里是一篇博文'],
+        '11': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+      },
+      '2018': {
+        '0': ['这里是一篇博文', '这里asassasd博文', '这里是一篇博文'],
+        '1': ['这里是一篇博文', '这里是一asadsasd篇博文'],
+        '2': ['这里是一篇博文', '这里是sdasd一篇博文', '这里是一篇博文'],
+        '3': ['这里是一篇博文', '这里是一asdasda篇博文'],
+        '5': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '7': ['这里是一篇博文', '这里是一篇博文'],
+        '8': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '9': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '10': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '11': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+      },
+      '2016': {
+        '0': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '1': ['这里是一篇博文', '这里是一篇博文'],
+        '2': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '3': ['这里是一篇博文', '这里是一篇博文'],
+        '4': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '7': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '8': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '9': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '10': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+        '11': ['这里是一篇博文', '这里是一篇博文', '这里是一篇博文', '这里是一篇博文'],
+      }
+    }
+    var years = Object.keys(data).sort((a, b) => parseInt(a) - parseInt(b));
+
+    var outerRing = document.getElementById('outer-ring');
+    var innerRing = document.getElementById('inner-ring');
+    var prevYear = document.getElementById('prev-year');
+    var nextYear = document.getElementById('next-year');
+    var year = document.getElementById('year');
+    var mouse = document.getElementById('mouse');
+    year.innerHTML = (new Date()).getFullYear();
+    outerRing.addEventListener('mouseleave', function(event) {
+      mouse.style.visibility = 'hidden';
+    });
+    innerRing.addEventListener('mouseenter', function(event) {
+      mouse.style.visibility = 'hidden';
+    });
+
+    var commitMove = false;
+    var clickdownPos = {};
+    outerRing.addEventListener('mousedown', function(event) {
+      clickdownPos = getMousePos(event);
+      var outerEle = outerRing.getBoundingClientRect();
+      clickdownPos.x -= outerEle.left;
+      clickdownPos.y -= outerEle.top;
+      console.log(clickdownPos)
+      commitMove = true;
+    });
+    document.addEventListener('mouseup', function() {
+      commitMove = false;
+    });
+    document.addEventListener('mousemove', function(event) {
+      if (!commitMove) return;
+      var pos = getMousePos(event);
+      var outerEle = outerRing.getBoundingClientRect();
+      var left = pos.x - clickdownPos.x;
+      var right = pos.y - clickdownPos.y;
+      if (left < 0) left = 0;
+      if (left > window.innerWidth - 200) left = window.innerWidth - 200;
+      if (right < 0) right = 0;
+      if (right > window.innerHeight - 200) right = window.innerHeight - 200;
+      console.log(right);
+      console.log(right);
+      outerRing.style.left = left + 'px';
+      outerRing.style.top = right + 'px';
+    });
+    prevYear.addEventListener('click', function() {
+      let targetYear = parseInt(year.innerHTML) - 1;
+      if (!data[targetYear]) {
+        targetYear = years[years.length - 1];
+      }
+      year.innerHTML = targetYear;
+      reset(targetYear);
+    });
+    nextYear.addEventListener('click', function() {
+      let targetYear = parseInt(year.innerHTML) + 1;
+      if (!data[targetYear]) {
+        targetYear = years[0];
+      }
+      reset(targetYear);
+      year.innerHTML = targetYear;
+    });
+
+    reset((new Date().getFullYear()));
+
+    function reset(year) {
+      var ls = document.querySelectorAll('.line');
+      for(var i = 0; i < ls.length; i++) {
+        ls[i].remove();
+      }
+      var blogObj = data[year];
+      for (var i = 0; i < 12; i++) {
+        (function(i){
+          var div = document.createElement('div');
+          div.style.transform = `rotate(${30*(i+1)+90}deg) skew(-60deg, 0)`;
+          div.style.backgroundColor = `rgba(0,0,0,${blogObj[i] ? (blogObj[i].length + 1)*0.1 : 0.05})`;
+          div.className = 'line';
+          div.addEventListener('mouseenter', function(event) {
+            if (commitMove) return;
+            mouse.innerHTML = blogObj[i] ? blogObj[i].join('</br>') : '荒度余生';
+            mouse.style.visibility = 'visible';
+            var pos = getMousePos(event);
+            mouse.style.left = (pos.x - 120) + 'px';
+            mouse.style.top = (pos.y - mouse.offsetHeight - 20) + 'px';
+            div.style.zIndex = 1;
+          });
+          div.addEventListener('mouseleave', function(event) {
+            mouse.innerHTML = '';
+            div.style.zIndex = 0;
+          });
+          outerRing.insertBefore(div, innerRing);
+        })(i);
+      }
+    }
+
+    function getMousePos(event) {
+      var e = event || window.event;
+      var scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
+      var scrollY = document.documentElement.scrollTop || document.body.scrollTop;
+      var x = e.pageX || e.clientX + scrollX;
+      var y = e.pageY || e.clientY + scrollY;
+      return {
+        'x': x,
+        'y': y
+      };
+    }
+
+  </script>
+</body>
+
+</html>
